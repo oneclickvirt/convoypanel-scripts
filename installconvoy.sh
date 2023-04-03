@@ -130,7 +130,7 @@ checkconvoy(){
     else
         _green "PVE version is: $pve_version"
     fi
-    if [[ $pve_version == "7.2-7" ]]; then # 此处增加一个空格以修复语法错误
+    if [[ $pve_version == "7.2-7" ]]; then
         convoy_version="v2.0.3-beta"
     elif [[ $pve_version == "7.3-4" || $pve_version > "7.3-4" ]]; then
         convoy_version="latest"
