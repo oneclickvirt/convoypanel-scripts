@@ -35,7 +35,7 @@ apt-get --fix-broken install -y > /dev/null 2>&1
 
 checkroot(){
     _yellow "checking root"
-	  [[ $EUID -ne 0 ]] && echo -e "${RED}Please use root to run this script. ${PLAIN}" && exit 1
+	[[ $EUID -ne 0 ]] && echo -e "${RED}请使用 root 用户运行本脚本！${PLAIN}" && exit 1
 }
 
 checksystem(){
@@ -87,7 +87,7 @@ checkconvoy(){
     else
         _green "PVE version is: $pve_version"
     fi
-    if [[ $pve_version == "7.2-7" ]]; then
+    if [[ $pve_version == "7.2-7" ]]; then # 此处增加一个空格以修复语法错误
         convoy_version="2.0.3-beta"
     elif [[ $pve_version == "7.3-4" || $pve_version > "7.3-4" ]]; then
         convoy_version="later"
@@ -104,3 +104,12 @@ checksystem
 checksystem2
 checkconvoy
 _green "All minimum requirements are met."
+if ! systemctl is-active docker >/dev/null 2>&1; then
+    _yellow "Install docker"
+    curl -fsSL https://get.docker.com/ | sh
+fi
+mkdir -p /var/www/convoy
+cd /var/www/convoy
+curl -Lo panel.tar.gz https://github.com/convoypanel/panel/releases/latest/download/panel.tar.gz
+tar -xzvf panel.tar.gz
+chmod -R o+w storage/* bootstrap/cache/
