@@ -38,9 +38,22 @@ checkroot(){
 	[[ $EUID -ne 0 ]] && echo -e "${RED}请使用 root 用户运行本脚本！${PLAIN}" && exit 1
 }
 
+check_ipv4(){
+  API_NET=("ip.sb" "ipget.net" "ip.ping0.cc" "https://ip4.seeip.org" "https://api.my-ip.io/ip" "https://ipv4.icanhazip.com" "api.ipify.org")
+  for p in "${API_NET[@]}"; do
+    response=$(curl -s4m8 "$p")
+    sleep 1
+    if [ $? -eq 0 ] && ! echo "$response" | grep -q "error"; then
+      IP_API="$p"
+      break
+    fi
+  done
+  ! curl -s4m8 $IP_API | grep -q '\.' && red " ERROR：The host must have IPv4. " && exit 1
+}
+
 checksystem(){
-    if [[ "$SYSTEM" == "Ubuntu" ]]; then
-        if [[ "$(lsb_release -rs)" == "20.04" || "$(lsb_release -rs)" == "22.04" ]]; then
+    if [[ "$SYSTEM" == "Ubuntu" || "$SYSTEM" == "Debian" ]]; then
+        if [[ "$(lsb_release -rs)" == "20.04" || "$(lsb_release -rs)" == "22.04" || "$(lsb_release -rs)" == "11" ]]; then
             return
         fi
     fi
@@ -100,16 +113,46 @@ checkconvoy(){
 
 
 checkroot
+check_ipv4
 checksystem
 checksystem2
 checkconvoy
 _green "All minimum requirements are met."
 if ! systemctl is-active docker >/dev/null 2>&1; then
-    _yellow "Install docker"
-    curl -fsSL https://get.docker.com/ | sh
+    echo -e " \n Install docker \n " 
+    ${PACKAGE_INSTALL[int]} docker.io
 fi
-mkdir -p /var/www/convoy
+if [ ! -d "/var/www/convoy" ]; then
+  mkdir -p /var/www/convoy
+fi
 cd /var/www/convoy
-curl -Lo panel.tar.gz https://github.com/convoypanel/panel/releases/latest/download/panel.tar.gz
-tar -xzvf panel.tar.gz
-chmod -R o+w storage/* bootstrap/cache/
+if [ ! -f "panel.tar.gz" ]; then
+  curl -Lo panel.tar.gz https://github.com/convoypanel/panel/releases/latest/download/panel.tar.gz
+fi
+if [ -f "panel.tar.gz" ]; then
+  tar -xzvf panel.tar.gz
+fi
+if [ -d "storage" ]; then
+  chmod -R o+w storage/*
+fi
+if [ -d "bootstrap/cache" ]; then
+  chmod -R o+w bootstrap/cache/
+fi
+if [ ! -f ".env" ]; then
+  cp .env.example .env
+fi
+random_str1=$(cat /dev/urandom | tr -dc 'a-z' | fold -w 6 | head -n 1)
+random_str2=$(cat /dev/urandom | tr -dc 'a-z' | fold -w 6 | head -n 1)
+random_str3=$(cat /dev/urandom | tr -dc 'a-z' | fold -w 6 | head -n 1)
+random_str4=$(cat /dev/urandom | tr -dc 'a-z' | fold -w 6 | head -n 1)
+random_str5=$(cat /dev/urandom | tr -dc 'a-z' | fold -w 6 | head -n 1)
+sed -i "s/DB_DATABASE=convoy/DB_DATABASE=$random_str1/g" .env
+sed -i "s/DB_USERNAME=convoy_user/DB_USERNAME=$random_str2/g" .env
+sed -i "s/DB_PASSWORD=/DB_PASSWORD=$random_str3/g" .env
+sed -i "s/DB_ROOT_PASSWORD=/DB_ROOT_PASSWORD=$random_str4/g" .env
+sed -i "s/REDIS_PASSWORD=null/REDIS_PASSWORD=$random_str5/g" .env
+_green "Now DB_DATABASE=$random_str1"
+_green "Now DB_USERNAME=$random_str2"
+_green "Now DB_PASSWORD=$random_str3"
+_green "Now DB_ROOT_PASSWORD=$random_str4"
+_green "Now REDIS_PASSWORD=$random_str5"
