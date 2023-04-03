@@ -38,6 +38,11 @@ checkroot(){
 	[[ $EUID -ne 0 ]] && echo -e "${RED}请使用 root 用户运行本脚本！${PLAIN}" && exit 1
 }
 
+checkupdate(){
+	    _yellow "Updating package management sources"
+		  ${PACKAGE_UPDATE[int]} > /dev/null 2>&1
+}
+
 check_ipv4(){
   API_NET=("ip.sb" "ipget.net" "ip.ping0.cc" "https://ip4.seeip.org" "https://api.my-ip.io/ip" "https://ipv4.icanhazip.com" "api.ipify.org")
   for p in "${API_NET[@]}"; do
@@ -143,13 +148,14 @@ checkconvoy(){
 
 
 checkroot
+checkupdate
+reload_apparmor
 check_ipv4
 check_docker
 check_docker_compose
 checksystem
 checksystem2
 checkconvoy
-reload_apparmor
 _green "All minimum requirements are met."
 if [ ! -d "/var/www/convoy" ]; then
   mkdir -p /var/www/convoy
