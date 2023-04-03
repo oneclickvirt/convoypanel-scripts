@@ -193,3 +193,4 @@ _green "Now DB_ROOT_PASSWORD=$random_str4"
 _green "Now REDIS_PASSWORD=$random_str5"
 docker-compose up -d
 # docker-compose exec workspace bash -c "composer install --no-dev --optimize-autoloader && npm install && npm run build"
+# docker compose exec workspace bash -c "php artisan key:generate --force && php artisan optimize"
