@@ -2,7 +2,7 @@
 # by spiritlhl
 # from https://github.com/spiritLHLS/convoypanel-scripts
 
-
+cd /root >/dev/null 2>&1
 ecsspeednetver="2023/04/04"
 spver="1.2.0"
 SERVER_BASE_URL="https://raw.githubusercontent.com/spiritLHLS/speedtest.net-CN-ID/main"
@@ -61,6 +61,30 @@ checksystem(){
     exit 1
 }
 
+check_docker(){
+  if ! systemctl is-active docker >/dev/null 2>&1; then
+      echo -e " \n Install docker \n " 
+      ${PACKAGE_INSTALL[int]} docker.io
+  fi
+}
+
+check_docker_compose(){
+  if ! command -v docker-compose >/dev/null 2>&1; then
+      _green "\n Install Docker Compose \n"
+      COMPOSE_URL=""
+      SYSTEM_ARCH=$(uname -m)
+      case $SYSTEM_ARCH in
+        "x86_64") COMPOSE_URL="https://github.com/docker/compose/releases/download/v2.17.2/docker-compose-linux-x86_64" ;;
+        "aarch64") COMPOSE_URL="https://github.com/docker/compose/releases/download/v2.17.2/docker-compose-linux-arm64" ;;
+        "armv6l") COMPOSE_URL="https://github.com/docker/compose/releases/download/v2.17.2/docker-compose-linux-armhf" ;;
+        "armv7l") COMPOSE_URL="https://github.com/docker/compose/releases/download/v2.17.2/docker-compose-linux-armhf" ;;
+        *) _red "\nArchitecture not supported for binary installation of Docker Compose.\n"; exit 1 ;;
+      esac
+      curl -SL $COMPOSE_URL -o /usr/local/bin/docker-compose
+      chmod +x /usr/local/bin/docker-compose
+   fi
+}
+
 checksystem2(){
     # Check CPU core count
     cpu_cores=$(grep -c ^processor /proc/cpuinfo)
@@ -92,6 +116,12 @@ checksystem2(){
     fi
 }
 
+reload_apparmor(){
+  ${PACKAGE_INSTALL[int]} apparmor-utils
+  aa-status
+  /etc/init.d/apparmor reload
+}
+
 checkconvoy(){
     pve_version=$(pveversion)
     if [ $? -ne 0 ]; then
@@ -101,9 +131,9 @@ checkconvoy(){
         _green "PVE version is: $pve_version"
     fi
     if [[ $pve_version == "7.2-7" ]]; then # 此处增加一个空格以修复语法错误
-        convoy_version="2.0.3-beta"
+        convoy_version="v2.0.3-beta"
     elif [[ $pve_version == "7.3-4" || $pve_version > "7.3-4" ]]; then
-        convoy_version="later"
+        convoy_version="latest"
     else
         _red "Error: Not support Proxmox Versions, please check https://docs.convoypanel.com/guide/deployment"
         exit 1
@@ -114,20 +144,19 @@ checkconvoy(){
 
 checkroot
 check_ipv4
+check_docker
+check_docker_compose
 checksystem
 checksystem2
 checkconvoy
+reload_apparmor
 _green "All minimum requirements are met."
-if ! systemctl is-active docker >/dev/null 2>&1; then
-    echo -e " \n Install docker \n " 
-    ${PACKAGE_INSTALL[int]} docker.io
-fi
 if [ ! -d "/var/www/convoy" ]; then
   mkdir -p /var/www/convoy
 fi
 cd /var/www/convoy
 if [ ! -f "panel.tar.gz" ]; then
-  curl -Lo panel.tar.gz https://github.com/convoypanel/panel/releases/latest/download/panel.tar.gz
+  curl -Lo panel.tar.gz "https://github.com/convoypanel/panel/releases/${convoy_version}/download/panel.tar.gz"
 fi
 if [ -f "panel.tar.gz" ]; then
   tar -xzvf panel.tar.gz
@@ -156,3 +185,5 @@ _green "Now DB_USERNAME=$random_str2"
 _green "Now DB_PASSWORD=$random_str3"
 _green "Now DB_ROOT_PASSWORD=$random_str4"
 _green "Now REDIS_PASSWORD=$random_str5"
+docker-compose up -d
+docker-compose exec workspace bash -c "composer install --no-dev --optimize-autoloader && npm install && npm run build"
