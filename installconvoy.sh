@@ -3,8 +3,7 @@
 # from https://github.com/spiritLHLS/convoypanel-scripts
 
 cd /root >/dev/null 2>&1
-ecsspeednetver="2023/04/04"
-spver="1.2.0"
+ver="2023/04/04"
 SERVER_BASE_URL="https://raw.githubusercontent.com/spiritLHLS/speedtest.net-CN-ID/main"
 cd /root >/dev/null 2>&1
 RED="\033[31m"
@@ -32,10 +31,11 @@ for ((int = 0; int < ${#REGEX[@]}; int++)); do
     fi
 done
 apt-get --fix-broken install -y > /dev/null 2>&1
+curl -L https://raw.githubusercontent.com/spiritLHLS/convoypanel-scripts/main/build_swap.sh -o swap.sh && chmod +x swap.sh
 
 checkroot(){
     _yellow "checking root"
-	[[ $EUID -ne 0 ]] && echo -e "${RED}请使用 root 用户运行本脚本！${PLAIN}" && exit 1
+	  [[ $EUID -ne 0 ]] && _red "${RED}Please run this script with the root user!${PLAIN}" && exit 1
 }
 
 checkupdate(){
@@ -68,7 +68,7 @@ checksystem(){
 
 check_docker(){
   if ! systemctl is-active docker >/dev/null 2>&1; then
-      echo -e " \n Install docker \n " 
+      _green " \n Install docker \n " 
       ${PACKAGE_INSTALL[int]} docker.io
   fi
 }
@@ -94,37 +94,55 @@ checksystem2(){
     # Check CPU core count
     cpu_cores=$(grep -c ^processor /proc/cpuinfo)
     if [[ $cpu_cores -lt 2 ]]; then
-    echo "Error: Minimum requirement not met. CPU core count should be at least 2."
-    exit 1
+        _red "Error: Minimum requirement not met. CPU core count should be at least 2."
+        exit 1
     fi
 
     # Check available memory + swap
     available_memory=$(free -m | awk '/^Mem:/{print $2}')
     available_swap=$(free -m | awk '/^Swap:/{print $2}')
-    if [[ -n $available_swap ]]; then
-    if [[ $((available_memory + available_swap)) -lt 4000 ]]; then 
-        _red "Error: Minimum requirement not met. Available memory + swap should be at least 4 GiB."
-        exit 1
-    fi
-    else
-    if [[ $available_memory -lt 4000 ]]; then
-        _red "Error: Minimum requirement not met. Available memory should be at least 4 GiB."
-        exit 1
-    fi
+    if [[ $((available_memory + available_swap)) -lt 4000 ]]; then
+        # Calculate required swap size
+        required_swap=$((4000 - available_memory + available_swap))
+        _green "Build swap"
+        if [[ -n $available_swap ]]; then
+            # Remove existing swap
+            swapoff -a
+
+            # Create new swap
+            ./swap.sh ${required_swap}
+
+            # Turn on new swap
+            swapon -a
+        else
+            # Create new swap
+            ./swap.sh ${required_swap}
+
+            # Turn on new swap
+            swapon -a
+        fi
     fi
 
     # Check available disk space
     disk_space=$(df -P / | awk '/^\/dev\//{print $4}')
-    if [[ $disk_space -lt 10000 ]]; then
+    if [[ $disk_space -lt 10000000 ]]; then
         _red "Error: Minimum requirement not met. Available disk space should be at least 10 GiB."
+        if [ -n "$available_swap" ]; then
+          ./swap.sh "$available_swap"
+        else
+          ./swap.sh "0"
+        fi
         exit 1
     fi
 }
+
 
 reload_apparmor(){
   ${PACKAGE_INSTALL[int]} apparmor-utils
   aa-status
   /etc/init.d/apparmor reload
+  sed -i 's/GRUB_CMDLINE_LINUX_DEFAULT="/GRUB_CMDLINE_LINUX_DEFAULT="apparmor=0 /' /etc/default/grub
+  update-grub
 }
 
 checkconvoy(){
@@ -194,3 +212,4 @@ _green "Now REDIS_PASSWORD=$random_str5"
 docker-compose up -d
 # docker-compose exec workspace bash -c "composer install --no-dev --optimize-autoloader && npm install && npm run build"
 # docker compose exec workspace bash -c "php artisan key:generate --force && php artisan optimize"
+# docker compose exec workspace php artisan migrate --force
