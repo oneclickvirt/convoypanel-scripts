@@ -54,6 +54,8 @@ check_ipv4(){
     fi
   done
   ! curl -s4m8 $IP_API | grep -q '\.' && red " ERROR：The host must have IPv4. " && exit 1
+  IPV4=$(curl -s4m8 "$IP_API")
+  export IPV4
 }
 
 checksystem(){
@@ -220,3 +222,5 @@ cd /var/www/convoy
 docker-compose exec workspace bash -c "composer install --no-dev --optimize-autoloader && npm install && npm run build"
 docker-compose exec workspace bash -c "php artisan key:generate --force && php artisan optimize"
 docker-compose exec workspace php artisan migrate --force
+_green "Please open http://{$IPV4}:80"
+_green "Please refer to https://docs.convoypanel.com/ for more information on installation, this script is for basic installation only."
