@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # by spiritlhl
 # from https://github.com/spiritLHLS/convoypanel-scripts
+# 2023/04/04
 
 cd /root >/dev/null 2>&1
-ver="2023/04/04"
 SERVER_BASE_URL="https://raw.githubusercontent.com/spiritLHLS/speedtest.net-CN-ID/main"
 cd /root >/dev/null 2>&1
 RED="\033[31m"
@@ -222,5 +222,7 @@ cd /var/www/convoy
 docker-compose exec workspace bash -c "composer install --no-dev --optimize-autoloader && npm install && npm run build"
 docker-compose exec workspace bash -c "php artisan key:generate --force && php artisan optimize"
 docker-compose exec workspace php artisan migrate --force
+_green "Build an administrator"
+docker-compose exec workspace php artisan c:user:make
 _green "Please open http://{$IPV4}:80"
 _green "Please refer to https://docs.convoypanel.com/ for more information on installation, this script is for basic installation only."
