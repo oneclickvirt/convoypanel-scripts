@@ -218,11 +218,25 @@ _green "Now DB_PASSWORD=$random_str3"
 _green "Now DB_ROOT_PASSWORD=$random_str4"
 _green "Now REDIS_PASSWORD=$random_str5"
 docker-compose up -d
+cd /
+curl -fsSL https://github.com/convoypanel/broker/releases/latest/download/broker.tar.gz | tar -xzv
 cd /var/www/convoy
 docker-compose exec workspace bash -c "composer install --no-dev --optimize-autoloader && npm install && npm run build"
 docker-compose exec workspace bash -c "php artisan key:generate --force && php artisan optimize"
 docker-compose exec workspace php artisan migrate --force
+version=$(pveversion | awk -F'/' '{print $2}' | cut -d '-' -f 1)
+if [[ $(echo "$version >= 7.0" | bc -l) -eq 1 ]]; then
+  output=$(pveum user token add root@pam test)
+  tokenid=$(echo "$output" | grep 'full-tokenid' | awk '{print $2}')
+  tokenvalue=$(echo "$output" | grep 'value' | awk '{print $2}')
+fi
 _green "Build an administrator"
 docker-compose exec workspace php artisan c:user:make
 _green "Please open http://{$IPV4}:80"
 _green "Please refer to https://docs.convoypanel.com/ for more information on installation, this script is for basic installation only."
+if [[ $(echo "$version >= 7.0" | bc -l) -eq 1 ]]; then
+  echo "PVE Version: $version"
+  echo "Token ID: $tokenid"
+  echo "Token Value: $tokenvalue"
+  _green "Please use them in http://{$IPV4}:80/admin/nodes"
+fi
