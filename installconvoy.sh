@@ -82,14 +82,14 @@ check_jq(){
   fi
 }
 
-check_wget{
+check_wget(){
   if ! command -v wget >/dev/null 2>&1; then
       _green " \n Install wget \n " 
       ${PACKAGE_INSTALL[int]} wget
   fi
 }
 
-check_curl{
+check_curl(){
   if ! command -v curl >/dev/null 2>&1; then
       _green " \n Install curl \n " 
       ${PACKAGE_INSTALL[int]} curl
