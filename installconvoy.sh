@@ -75,6 +75,27 @@ check_docker(){
   fi
 }
 
+check_jq(){
+  if ! command -v jq >/dev/null 2>&1; then
+      _green " \n Install jq \n " 
+      ${PACKAGE_INSTALL[int]} jq
+  fi
+}
+
+check_wget{
+  if ! command -v wget >/dev/null 2>&1; then
+      _green " \n Install wget \n " 
+      ${PACKAGE_INSTALL[int]} wget
+  fi
+}
+
+check_curl{
+  if ! command -v curl >/dev/null 2>&1; then
+      _green " \n Install curl \n " 
+      ${PACKAGE_INSTALL[int]} curl
+  fi
+}
+
 check_docker_compose(){
   if ! command -v docker-compose >/dev/null 2>&1; then
       _green "\n Install Docker Compose \n"
@@ -175,12 +196,15 @@ checkconvoy(){
 
 checkroot
 checkupdate
+check_wget
+check_curl
 # reload_apparmor
+checksystem
+checksystem2
 check_ipv4
 check_docker
 check_docker_compose
-checksystem
-checksystem2
+check_jq
 checkconvoy
 _green "All minimum requirements are met."
 if [ ! -d "/var/www/convoy" ]; then
@@ -226,9 +250,8 @@ docker-compose exec workspace bash -c "php artisan key:generate --force && php a
 docker-compose exec workspace php artisan migrate --force
 version=$(pveversion | awk -F'/' '{print $2}' | cut -d '-' -f 1)
 if [[ $(echo "$version >= 7.0" | bc -l) -eq 1 ]]; then
-  output=$(pveum user token add root@pam test)
-  tokenid=$(echo "$output" | grep 'full-tokenid' | awk '{print $2}')
-  tokenvalue=$(echo "$output" | grep 'value' | awk '{print $2}')
+  tokenid="root@pam!test"
+  tokenvalue=$(pveum user token add root@pam test --output-format=json | jq -r '.["value"]')
 fi
 _green "Build an administrator"
 docker-compose exec workspace php artisan c:user:make
