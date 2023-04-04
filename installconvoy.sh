@@ -137,13 +137,19 @@ checksystem2(){
 }
 
 
-reload_apparmor(){
-  ${PACKAGE_INSTALL[int]} apparmor-utils
-  aa-status
-  /etc/init.d/apparmor reload
-  sed -i 's/GRUB_CMDLINE_LINUX_DEFAULT="/GRUB_CMDLINE_LINUX_DEFAULT="apparmor=0 /' /etc/default/grub
-  update-grub
-}
+# reload_apparmor(){
+#   # ${PACKAGE_INSTALL[int]} apparmor-utils
+#   # aa-status
+#   # /etc/init.d/apparmor reload
+#   if grep -q 'GRUB_CMDLINE_LINUX_DEFAULT=".*apparmor=0' /etc/default/grub; then
+#     _green "reload apparmor success"
+#   else
+#     sed -i 's/GRUB_CMDLINE_LINUX_DEFAULT="/GRUB_CMDLINE_LINUX_DEFAULT="apparmor=0 /' /etc/default/grub
+#     update-grub
+#     _green "Please reboot the system to load the configuration"
+#     exit 1
+#   fi
+# }
 
 checkconvoy(){
     pve_version=$(pveversion)
@@ -167,7 +173,7 @@ checkconvoy(){
 
 checkroot
 checkupdate
-reload_apparmor
+# reload_apparmor
 check_ipv4
 check_docker
 check_docker_compose
@@ -210,6 +216,7 @@ _green "Now DB_PASSWORD=$random_str3"
 _green "Now DB_ROOT_PASSWORD=$random_str4"
 _green "Now REDIS_PASSWORD=$random_str5"
 docker-compose up -d
-# docker-compose exec workspace bash -c "composer install --no-dev --optimize-autoloader && npm install && npm run build"
-# docker compose exec workspace bash -c "php artisan key:generate --force && php artisan optimize"
-# docker compose exec workspace php artisan migrate --force
+cd /var/www/convoy
+docker-compose exec workspace bash -c "composer install --no-dev --optimize-autoloader && npm install && npm run build"
+docker-compose exec workspace bash -c "php artisan key:generate --force && php artisan optimize"
+docker-compose exec workspace php artisan migrate --force
