@@ -4,8 +4,6 @@
 # 2023/04/04
 
 cd /root >/dev/null 2>&1
-SERVER_BASE_URL="https://raw.githubusercontent.com/spiritLHLS/speedtest.net-CN-ID/main"
-cd /root >/dev/null 2>&1
 RED="\033[31m"
 GREEN="\033[32m"
 YELLOW="\033[33m"
