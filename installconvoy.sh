@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # by spiritlhl
-# from https://github.com/spiritLHLS/convoypanel-scripts
+# from https://github.com/oneclickvirt/convoypanel-scripts
 # 2023/04/04
 
 utf8_locale=$(locale -a 2>/dev/null | grep -i -m 1 -E "UTF-8|utf8")
@@ -39,7 +39,7 @@ for ((int = 0; int < ${#REGEX[@]}; int++)); do
     fi
 done
 apt-get --fix-broken install -y > /dev/null 2>&1
-curl -L https://raw.githubusercontent.com/spiritLHLS/convoypanel-scripts/main/build_swap.sh -o swap.sh && chmod +x swap.sh
+curl -L https://raw.githubusercontent.com/oneclickvirt/convoypanel-scripts/main/build_swap.sh -o swap.sh && chmod +x swap.sh
 
 checkroot(){
     _yellow "checking root"

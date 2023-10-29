@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# by https://github.com/spiritLHLS/convoypanel-scripts
+# by https://github.com/oneclickvirt/convoypanel-scripts
 #./build_swap.sh Memory size (in MB)
 
 utf8_locale=$(locale -a 2>/dev/null | grep -i -m 1 -E "UTF-8|utf8")
