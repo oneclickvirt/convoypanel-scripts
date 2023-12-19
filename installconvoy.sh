@@ -279,8 +279,9 @@ docker-compose exec workspace bash -c "php artisan key:generate --force && php a
 docker-compose exec workspace php artisan migrate --force
 version=$(pveversion | awk -F'/' '{print $2}' | cut -d '-' -f 1)
 if [[ $(echo "$version >= 7.0" | bc -l) -eq 1 ]]; then
-  tokenid="root@pam!test"
-  tokenvalue=$(pveum user token add root@pam test --output-format=json | jq -r '.["value"]')
+  userid="root@pam"
+  tokenid="test"
+  tokenvalue=$(pveum user token add $userid $tokenid --output-format=json | jq -r '.["value"]')
 fi
 _green "Build an administrator"
 docker-compose exec workspace php artisan c:user:make
