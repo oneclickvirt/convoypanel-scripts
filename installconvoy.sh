@@ -292,3 +292,5 @@ if [[ $(echo "$version >= 7.0" | bc -l) -eq 1 ]]; then
   echo "Token Value: $tokenvalue"
   _green "Please use them in http://$IPV4:80/admin/nodes"
 fi
+cd /
+curl -fsSL https://github.com/convoypanel/broker/releases/latest/download/broker.tar.gz | tar -xzv
