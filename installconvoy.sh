@@ -287,6 +287,7 @@ docker-compose exec workspace php artisan c:user:make
 _green "Please open http://$IPV4:80"
 _green "Please refer to https://docs.convoypanel.com/ for more information on installation, this script is for basic installation only."
 if [[ $(echo "$version >= 7.0" | bc -l) -eq 1 ]]; then
+  echo "Guided page: https://convoypanel.com/docs/panel/adding-a-node.html#generating-a-proxmox-api-token"
   echo "PVE Version: $version"
   echo "Token ID: $tokenid"
   echo "Token Value: $tokenvalue"
