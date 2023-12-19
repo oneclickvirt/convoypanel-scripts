@@ -291,7 +291,7 @@ if [[ $(echo "$version >= 7.0" | bc -l) -eq 1 ]]; then
   echo "Guided page: https://convoypanel.com/docs/panel/adding-a-node.html#adding-the-node-in-convoy"
   echo "PVE Version: $version"
   echo "Token ID: $tokenid"
-  echo "Token Value: $tokenvalue"
+  echo "Secret: $tokenvalue"
   _green "Please use them in http://$IPV4:80/admin/nodes"
 fi
 cd /
