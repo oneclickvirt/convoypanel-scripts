@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # by spiritlhl
 # from https://github.com/oneclickvirt/convoypanel-scripts
-# 2023/12/19
+# 2025.04.20
 
 utf8_locale=$(locale -a 2>/dev/null | grep -i -m 1 -E "UTF-8|utf8")
 if [[ -z "$utf8_locale" ]]; then
@@ -124,6 +124,18 @@ check_docker_compose() {
   fi
 }
 
+detect_docker_compose_command() {
+  if command -v docker-compose >/dev/null 2>&1; then
+    DOCKER_COMPOSE_CMD="docker-compose"
+  elif docker compose version >/dev/null 2>&1; then
+    DOCKER_COMPOSE_CMD="docker compose"
+  else
+    _red "Neither docker-compose nor docker compose command is available"
+    exit 1
+  fi
+  export DOCKER_COMPOSE_CMD
+}
+
 checksystem2() {
   # Check CPU core count
   cpu_cores=$(grep -c ^processor /proc/cpuinfo)
@@ -131,7 +143,6 @@ checksystem2() {
     _red "Error: Minimum requirement not met. CPU core count should be at least 2."
     exit 1
   fi
-
   # Check available memory + swap
   available_memory=$(free -m | awk '/^Mem:/{print $2}')
   available_swap=$(free -m | awk '/^Swap:/{print $2}')
@@ -142,21 +153,17 @@ checksystem2() {
     if [[ -n $available_swap ]]; then
       # Remove existing swap
       swapoff -a
-
       # Create new swap
       ./swap.sh ${required_swap}
-
       # Turn on new swap
       swapon -a
     else
       # Create new swap
       ./swap.sh ${required_swap}
-
       # Turn on new swap
       swapon -a
     fi
   fi
-
   # Check available disk space
   disk_space=$(df -P / | awk '/^\/dev\//{print $4}')
   if [[ $disk_space -lt 10000000 ]]; then
@@ -169,20 +176,6 @@ checksystem2() {
     exit 1
   fi
 }
-
-# reload_apparmor(){
-#   # ${PACKAGE_INSTALL[int]} apparmor-utils
-#   # aa-status
-#   # /etc/init.d/apparmor reload
-#   if grep -q 'GRUB_CMDLINE_LINUX_DEFAULT=".*apparmor=0' /etc/default/grub; then
-#     _green "reload apparmor success"
-#   else
-#     sed -i 's/GRUB_CMDLINE_LINUX_DEFAULT="/GRUB_CMDLINE_LINUX_DEFAULT="apparmor=0 /' /etc/default/grub
-#     update-grub
-#     _green "Please reboot the system to load the configuration"
-#     exit 1
-#   fi
-# }
 
 checkconvoy() {
   pve_version=$(pveversion)
@@ -207,12 +200,12 @@ checkroot
 checkupdate
 check_wget
 check_curl
-# reload_apparmor
 checksystem
 checksystem2
 check_ipv4
 check_docker
 check_docker_compose
+detect_docker_compose_command
 check_jq
 checkconvoy
 _green "All minimum requirements are met."
@@ -270,13 +263,13 @@ _green "Now DB_USERNAME=$random_str2"
 _green "Now DB_PASSWORD=$random_str3"
 _green "Now DB_ROOT_PASSWORD=$random_str4"
 _green "Now REDIS_PASSWORD=$random_str5"
-docker compose up -d
+$DOCKER_COMPOSE_CMD up -d
 cd /
 curl -fsSL https://github.com/convoypanel/broker/releases/latest/download/broker.tar.gz | tar -xzv
 cd /var/www/convoy
-docker-compose exec workspace bash -c "composer install --no-dev --optimize-autoloader && npm install && npm run build"
-docker-compose exec workspace bash -c "php artisan key:generate --force && php artisan optimize"
-docker-compose exec workspace php artisan migrate --force
+$DOCKER_COMPOSE_CMD exec workspace bash -c "composer install --no-dev --optimize-autoloader && npm install && npm run build"
+$DOCKER_COMPOSE_CMD exec workspace bash -c "php artisan key:generate --force && php artisan optimize"
+$DOCKER_COMPOSE_CMD exec workspace php artisan migrate --force
 version=$(pveversion | awk -F'/' '{print $2}' | cut -d '-' -f 1)
 if [[ $(echo "$version >= 7.0" | bc -l) -eq 1 ]]; then
   userid="root@pam"
@@ -284,7 +277,7 @@ if [[ $(echo "$version >= 7.0" | bc -l) -eq 1 ]]; then
   tokenvalue=$(pveum user token add $userid $tokenid --output-format=json | jq -r '.["value"]')
 fi
 _green "Build an administrator"
-docker-compose exec workspace php artisan c:user:make
+$DOCKER_COMPOSE_CMD exec workspace php artisan c:user:make
 _green "Please open http://$IPV4:80"
 _green "Please refer to https://docs.convoypanel.com/ for more information on installation, this script is for basic installation only."
 if [[ $(echo "$version >= 7.0" | bc -l) -eq 1 ]]; then
