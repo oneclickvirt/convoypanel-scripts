@@ -4,4 +4,10 @@
 
 ## 说明
 
+中文：
+
 https://www.spiritlhl.net/incomplete/convoy.html
+
+English:
+
+https://www.spiritlhl.net/en/incomplete/convoy.html
