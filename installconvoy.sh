@@ -39,7 +39,6 @@ for ((int = 0; int < ${#REGEX[@]}; int++)); do
   fi
 done
 apt-get --fix-broken install -y >/dev/null 2>&1
-curl -L https://raw.githubusercontent.com/oneclickvirt/convoypanel-scripts/main/build_swap.sh -o swap.sh && chmod +x swap.sh
 
 checkroot() {
   _yellow "checking root"
@@ -152,16 +151,12 @@ checksystem2() {
     _green "Build swap"
     if [[ -n $available_swap ]]; then
       # Remove existing swap
-      swapoff -a
-      # Create new swap
-      ./swap.sh ${required_swap}
+      ls
       # Turn on new swap
-      swapon -a
+    
     else
       # Create new swap
-      ./swap.sh ${required_swap}
-      # Turn on new swap
-      swapon -a
+      ls
     fi
   fi
   # Check available disk space
@@ -169,9 +164,9 @@ checksystem2() {
   if [[ $disk_space -lt 10000000 ]]; then
     _red "Error: Minimum requirement not met. Available disk space should be at least 10 GiB."
     if [ -n "$available_swap" ]; then
-      ./swap.sh "$available_swap"
+      ls
     else
-      ./swap.sh "0"
+      ls
     fi
     exit 1
   fi
