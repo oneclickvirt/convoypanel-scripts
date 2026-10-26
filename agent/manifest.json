@@ -1,0 +1,10 @@
+{
+  "repository": "oneclickvirt/convoypanel-scripts",
+  "skill_name": "oneclickvirt-convoypanel-scripts",
+  "mcp": false,
+  "files": {
+    "agent/profile.json": "bbaf7f142e990b8e5997ccb7238bc473b261516ee83de3065d8a4c98d8fd36fe",
+    "skills/oneclickvirt-convoypanel-scripts/SKILL.md": "24bfe2cce76a6d9e2c318f650f411def6c8109f128d010ae5efae4b2bdb20845",
+    "skills/oneclickvirt-convoypanel-scripts/SKILL_ZH.md": "5df54745a664cb1abc03fb3a8947658ab474f05f427c86f2ddbdd72f8ced2fd3"
+  }
+}

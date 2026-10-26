@@ -1,0 +1,21 @@
+{
+  "repository": "oneclickvirt/convoypanel-scripts",
+  "branch": "main",
+  "skill_name": "oneclickvirt-convoypanel-scripts",
+  "purpose": "Deploy and maintain Convoy using this repository's reviewed shell scripts.",
+  "notes": [
+    "Read installconvoy.sh before installation and build_swap.sh before changing swap. Uninstallation changes services and data; inspect uninstallconvoy.sh and preserve required backups."
+  ],
+  "guide": "https://www.spiritlhl.net/guide/agent_integrations.html",
+  "releases": false,
+  "mcp": false,
+  "source_files": [
+    "build_swap.sh",
+    "installconvoy.sh",
+    "uninstallconvoy.sh"
+  ],
+  "purpose_zh": "按仓库现有脚本部署和维护 Convoy 面板。",
+  "notes_zh": [
+    "安装前阅读 installconvoy.sh，更改 swap 前阅读 build_swap.sh。卸载会影响服务及数据，应核对 uninstallconvoy.sh 并保留所需备份。"
+  ]
+}
